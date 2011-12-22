@@ -1,0 +1,86 @@
+ABOUT
+-----
+
+PACK is a library for performing conversions between simple Lisp
+values and C structs represented as byte arrays.  It is similar in
+spirit to Perl's pack/unpack or Python's struct module, but is very
+different syntactically as it embraces the SEXP.
+
+Compared to CL-PACK, PACK strives to be "Lispier" as well as
+extensible.  Compared to Peter Seibel's examples in Practical Common
+Lisp (chapters 24 and 25), PACK is more declarative and re-usable.
+
+PACK also strives to be compatible with CFFI wherever reasonable.
+
+
+BASIC USAGE
+-----------
+
+In its most basic form, you can call PACK with a list of types and
+values:
+
+> (pack stream :ushort 1 :uchar 2 :uchar 3)
+#(0 1 2 3)
+
+UNPACK takes a list of types and returns a list of values:
+
+> (unpack stream :ushort :uchar :uchar)
+(1 2 3)
+
+UNPACK will return nil on EOF.  For convenience, singletons are not
+returned as a list.
+
+> (unpack stream :ushort)
+1
+
+Aside from the CFFI types, :pad is recognized as an empty/filler byte.
+
+> (pack stream :uchar 1 :pad :ushort 2)
+#(1 0 0 2)
+
+> (unpack stream '(:pad 2) :ushort)
+2
+
+Arrays can be specified by providing a length:
+
+> (pack stream :ushort 1 '(:uchar 2) #(2 3))
+#(0 1 2 3)
+
+> (unpack stream :ushort '(:uchar 2))
+(1 #(2 3))
+
+Note that despite the apparent (and intentional, for simple cases)
+similarity to keyword arguments, type specifications can have some
+internal structure.
+
+Arrays get more interesting when they are length-encoded:
+
+> (pack stream :ushort 1 '(:uchar :ushort) #(2 3))
+#(0 1 0 2 2 3)
+
+> (unpack stream :ushort '(:uchar :ushort))
+(1 #(2 3))
+
+Arrays can also run to EOF (frequently length is implicit due to
+nesting of structures):
+
+> (pack stream '(:uchar *) bytes)
+
+
+STRINGS
+-------
+
+The types we've seen so far are just the basic types provided by
+CFFI.  Any unrecognized type is assumed to specify a character encoding
+(as used by BABEL) and the corresponding argument is a string encoded
+in the named manner.  String lengths are always the length of the
+encoded byte sequence.
+
+> (pack stream '(:utf-8 :ushort) "I'm a UTF-8 string with a 2-byte length prefix")
+
+String, and sequences in general, can be delimited.  Note that the
+delimiter, if any, is a byte sequence detected before any decoding
+happens.
+
+> (unpack stream '(:utf-8 #\Null))
+> (unpack stream '(:utf-8 #\Return #\Newline))
