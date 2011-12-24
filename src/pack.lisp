@@ -72,7 +72,8 @@
           (when (assoc length-tag *writers* :test #'eq)
             (write* stream length-tag (length value)))
           (if (member encoding '(:byte :octet :uchar :uint8 :unsigned-char))
-              (write-sequence value stream)
+              (when (plusp (length value))
+                (write-sequence value stream))
               (loop for obj across value do (write* stream encoding obj))))
         (let ((octets
                (if (eq encoding :string)
@@ -80,7 +81,8 @@
                    (babel:string-to-octets value :encoding encoding))))
           (when (assoc length-tag *writers* :test #'eq)
             (write* stream length-tag (length octets)))
-          (write-sequence octets stream)))))
+          (when (plusp (length octets))
+            (write-sequence octets stream))))))
 
 (defun read-sequence* (stream tag)
   (destructuring-bind (encoding length-tag)
@@ -104,7 +106,10 @@
         (if (assoc encoding *readers* :test #'eq)
             (if (member encoding '(:byte :octet :uchar :uint8 :unsigned-char))
                 (slurp)
-                nil)
+                (coerce (if length
+                            (loop repeat length collect (read* stream encoding))
+                            (loop for obj = (read* stream encoding) while obj collect obj))
+                        'vector))
             (let ((octets (slurp)))
               (if (eq encoding :string)
                   (babel:octets-to-string octets)
@@ -159,6 +164,17 @@
   (let ((bits (read-word stream (unsigned-byte 64))))
     (ieee-floats:decode-float64 bits)))
 
+;; Intel 8087
+(ieee-floats:make-float-converters encode-float80 decode-float80 15 64 nil)
+
+(defwriter write-long-double :long-double (stream value)
+  (let ((bits (encode-float80 value)))
+    (write-word stream bits 80)))
+
+(defreader read-long-double :long-double (stream)
+  (let ((bits (read-word stream (unsigned-byte 80))))
+    (decode-float80 bits)))
+
 (defmacro word (tag (&whole type signed bits))
   (declare (ignore signed))
   (with-unique-names (value stream)
@@ -199,7 +215,7 @@
             for tag in tags
             for value = (read* stream tag)
             unless value do (return nil)
-            unless (eq tag :pad)
+            unless (member :pad tag (first tag))
             collect value)))
     (if (null (rest values))
         (first values)
