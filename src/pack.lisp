@@ -1,4 +1,4 @@
-(in-package #:pack)
+(in-package #:yapack)
 
 (deftype octet ()
   '(unsigned-byte 8))

@@ -1,4 +1,4 @@
-(in-package #:pack-test)
+(in-package #:yapack-test)
 
 (defun tag-p (arg)
   (or (keywordp arg)

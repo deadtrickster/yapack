@@ -1,16 +1,16 @@
 ABOUT
 -----
 
-PACK is a library for performing conversions between simple Lisp
+YAPACK is a library for performing conversions between simple Lisp
 values and C structs represented as byte arrays.  It is similar in
 spirit to Perl's pack/unpack or Python's struct module, but is very
 different syntactically as it embraces the SEXP.
 
-Compared to CL-PACK, PACK strives to be "Lispier" as well as
+Compared to CL-PACK, YAPACK strives to be "Lispier" as well as
 extensible.  Compared to Peter Seibel's examples in Practical Common
-Lisp (chapters 24 and 25), PACK is more declarative and re-usable.
+Lisp (chapters 24 and 25), YAPACK is more declarative and re-usable.
 
-PACK also strives to be compatible with CFFI wherever reasonable.
+YAPACK also strives to be compatible with CFFI wherever reasonable.
 
 
 BASIC USAGE

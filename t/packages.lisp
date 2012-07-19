@@ -1,6 +1,6 @@
 (in-package #:common-lisp-user)
 
-(defpackage #:pack-test
+(defpackage #:yapack-test
   (:use #:common-lisp
         #:lisp-unit
-        #:pack))
+        #:yapack))

@@ -1,8 +1,9 @@
 (in-package #:common-lisp-user)
 
-(defpackage #:pack
+(defpackage #:yapack
   (:use #:alexandria
         #:common-lisp)
+  (:nicknames #:pack)
   (:export #:*endianness*
            #:defreader
            #:defwriter
