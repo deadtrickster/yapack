@@ -21,6 +21,11 @@
 (defvar *writers* nil)
 (defvar *readers* nil)
 
+(defun size-of (tag)
+  "Size in bytes."
+  (let ((type (rassoc tag *base-types* :test #'member)))
+    (floor (cadar type) 8)))
+
 (defun write* (stream tag value &rest args)
   (if-let ((writer (assoc tag *writers* :test #'eq)))
     (apply (cdr writer) stream value args)
@@ -210,16 +215,18 @@
     (apply #'pack stream args)))
 
 (defun unpack (stream &rest tags)
-  (let ((values
-         (loop
-            for tag in tags
-            for value = (read* stream tag)
-            unless value do (return nil)
-            unless (member :pad tag (first tag))
-            collect value)))
-    (if (null (rest values))
-        (first values)
-        values)))
+  (loop
+     for tag in tags
+     for value = (read* stream tag)
+     while value
+     unless (or (eq tag :pad)
+                (and (listp tag)
+                     (eq (first tag) :pad)))
+     collect value into values
+     finally (return
+               (if (null (rest values))
+                   (first values)
+                   values))))
 
 (defmacro unpacking ((stream bytes) &body body)
   `(babel-streams:with-input-from-sequence (,stream ,bytes)
@@ -228,6 +235,8 @@
 (defun unpack-bytes (bytes &rest args)
   (unpacking (stream bytes)
     (apply #'unpack stream args)))
+
+;; TODO: Should be able to automagically add type declarations.
 
 ;; (with-unpack (s)
 ;;     ((this :byte)

@@ -12,6 +12,7 @@
            #:pack-bytes
            #:octet
            #:octets
+           #:size-of
            #:unpack
            #:unpacking
            #:unpack-bytes
